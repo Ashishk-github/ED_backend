@@ -1,6 +1,7 @@
 const UserRepository = require("../repository/UserRepository");
 const SessionsRepository = require("../repository/SessionsRepository");
 const jwt = require("jsonwebtoken");
+const { config } = require("../config/config");
 
 module.exports = class UserService {
   constructor() {
@@ -18,9 +19,9 @@ module.exports = class UserService {
         if (user.password === password) {
           const token = jwt.sign(
             { userId: String(user.id) },
-            "xube8c93e9ebx8bec99--r2g7---ce8bw8xb8becyrvcbehbuebx"
+            config.app.app_key
           );
-          return { jwt: token };
+          return { jwt: token, user };
         } else return { error: "Incorrect Password" };
       }
     } catch (error) {
@@ -37,6 +38,7 @@ module.exports = class UserService {
       });
       if (existingUser) return { error: "User already exists!!" };
       const session = await this.sessionsRepository.findOne({});
+      console.log(session);
       console.log(
         "sess->",
         session,
@@ -60,11 +62,8 @@ module.exports = class UserService {
           },
         },
       ]);
-      const token = jwt.sign(
-        { userId: String(user.id) },
-        "xube8c93e9ebx8bec99--r2g7---ce8bw8xb8becyrvcbehbuebx"
-      );
-      return { message: "created successfully", id: user.id, jwt: token };
+      const token = jwt.sign({ userId: String(user.id) }, config.app.app_key);
+      return { message: "created successfully", user: user, jwt: token };
     } catch (error) {
       throw error;
     }
