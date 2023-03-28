@@ -1,11 +1,13 @@
 const UserRepository = require("../repository/UserRepository");
 const SessionsRepository = require("../repository/SessionsRepository");
+const UserAssignmentsRepository = require("../repository/UserAssignmentsRepository");
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
 
 module.exports = class UserService {
   constructor() {
     this.userRepository = new UserRepository();
+    this.userAssignmentsRepository = new UserAssignmentsRepository();
     this.sessionsRepository = new SessionsRepository();
   }
 
@@ -38,13 +40,13 @@ module.exports = class UserService {
       });
       if (existingUser) return { error: "User already exists!!" };
       const session = await this.sessionsRepository.findOne({});
-      console.log(session);
-      console.log(
-        "sess->",
-        session,
-        String(session._id),
-        String(session.lessonId)
-      );
+      // console.log(session);
+      // console.log(
+      //   "sess->",
+      //   session,
+      //   String(session._id),
+      //   String(session.lessonId)
+      // );
       const [user] = await this.userRepository.create([
         {
           name,
@@ -62,6 +64,12 @@ module.exports = class UserService {
           },
         },
       ]);
+      await this.userAssignmentsRepository.create({
+        userId: user._id,
+        lessonId: session.lessonId,
+        sessionId: session._id,
+        courseId: session.courseId,
+      });
       const token = jwt.sign({ userId: String(user.id) }, config.app.app_key);
       return { message: "created successfully", user: user, jwt: token };
     } catch (error) {
