@@ -28,4 +28,15 @@ module.exports = class SessionsController extends Controller {
       this.sendError(error);
     }
   }
+
+  async skipQuestion(req) {
+    try {
+      const sessionsServiceResponse = await this.sessionsService.skipQuestion(
+        req.body
+      );
+      this.respond(sessionsServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
 };

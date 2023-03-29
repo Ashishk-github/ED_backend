@@ -27,13 +27,10 @@ module.exports = class LessonsService {
       ]);
 
       let status = "completed";
-      console.log(args);
       sessions.forEach((session) => {
         let assignment = assignments.find((a) => {
-          console.log(String(a.sessionId), String(session._id));
           return String(a.sessionId) === String(session._id);
         });
-        console.log(assignment);
         let status = assignment?.status ? assignment.status : "locked";
         lesson.sessions.push({ ...session, status });
       });

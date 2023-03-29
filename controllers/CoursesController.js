@@ -9,7 +9,6 @@ module.exports = class CoursesController extends Controller {
 
   async getAll(req) {
     try {
-      console.log(req.query);
       const coursesServiceResponse = await this.coursesService.getAll(
         req.query
       );
@@ -22,7 +21,6 @@ module.exports = class CoursesController extends Controller {
 
   async all(req) {
     try {
-      console.log(req.query);
       const coursesServiceResponse = await this.coursesService.all2(req.query);
       this.respond(coursesServiceResponse);
     } catch (error) {

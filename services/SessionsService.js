@@ -12,50 +12,14 @@ module.exports = class SessionsService {
     this.notesService = new NotesService();
   }
 
-  // async submitQuestion(args) {
-  //   try {
-  //     const { userId, answer } = args;
-  //     const user = await this.userRepository.findOne({ _id: userId }).lean();
-  //     const sessionId = user?.courses?.currentQuestion?.id;
-  //     const session = await this.sessionsRepository.find().lean();
-  //     const index = session.findIndex((s) => String(s._id) === sessionId);
-  //     let currentQuestion = session[index + 1];
-  //     console.log(index, session, sessionId);
-  //     const previousQuestion = {
-  //       ...user?.courses?.currentQuestion,
-  //       endedAt: new Date(),
-  //       answer,
-  //     };
-  //     if (currentQuestion)
-  //       currentQuestion = {
-  //         id: String(currentQuestion._id),
-  //         lessonId: String(currentQuestion.lessonId),
-  //         startedAt: new Date(),
-  //       };
-  //     else currentQuestion = {};
-  //     const users = await this.userRepository.updateOne(
-  //       { _id: userId },
-  //       {
-  //         $set: { "courses.currentQuestion": currentQuestion },
-  //         $push: { "courses.previousQuestion": previousQuestion },
-  //       }
-  //     );
-  //     return { message: "submited successfully" };
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
   async submitQuestion(args) {
     try {
       const { sessionId, userId, answer } = args;
-      console.log(args);
       const [session, user, assignment] = await Promise.all([
         this.sessionsRepository.findOne({ _id: sessionId }).lean(),
         this.userRepository.findOne({ _id: userId }).lean(),
         this.userAssignmentsService.get({ userId, sessionId }),
       ]);
-      console.log(assignment[0]);
       const note = {
         userAssignmentId: assignment && assignment[0]?._id,
         answer,
@@ -70,8 +34,8 @@ module.exports = class SessionsService {
         sessionId: nextSession._id,
         userId,
       });
-      await this.userAssignmentsService.update(
-        { _id: assignment._id },
+      const upd = await this.userAssignmentsService.update(
+        { _id: assignment && assignment[0]?._id },
         {
           endedAt: Date.now().toLocaleString("en-US", {
             timeZone: "Asia/Kolkata",
@@ -98,15 +62,54 @@ module.exports = class SessionsService {
         await this.userAssignmentsService.update(
           { _id: start[0]._id },
           {
-            $set: {
-              status: "inprogress",
-              startedAt: Date.now().toLocaleString("en-US", {
-                timeZone: "Asia/Kolkata",
-              }),
-            },
+            status: "inprogress",
+            startedAt: Date.now().toLocaleString("en-US", {
+              timeZone: "Asia/Kolkata",
+            }),
           }
         );
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async skipQuestion(args) {
+    try {
+      const { userId, sessionId } = args;
+      const user = await this.userRepository.findOnelean({ _id: userId });
+      if (!user?.skips) return { error: "No Skips Available" };
+      const [assignment, session] = await Promise.all([
+        this.userAssignmentsService.get({
+          userId,
+          sessionId,
+        }),
+        this.sessionsRepository.findOnelean({ _id: sessionId }),
+      ]);
+      const ifAlreadyExists = await this.userAssignmentsService.get({
+        userId,
+        sessionId: session?.nextQuestion,
+      });
+      if (ifAlreadyExists?.length) return { error: "Already Skipped" };
+      const nextSession = await this.sessionsRepository.findOnelean({
+        _id: session?.nextQuestion,
+      });
+      if (!assignment?.length || assignment[0]?.status !== "inprogress")
+        return { error: "Forbidden" };
+      if (session.type === "interview")
+        return { error: "Interview Cannot Be Skipped" };
+      await Promise.all([
+        this.userAssignmentsService.create({
+          lessonId: nextSession.lessonId,
+          sessionId: nextSession._id,
+          userId,
+        }),
+        this.userRepository.updateOne(
+          { _id: userId },
+          { $set: { skips: user.skips - 1 } }
+        ),
+      ]);
+      return { error: "Skipped Successfully" };
     } catch (error) {
       throw error;
     }

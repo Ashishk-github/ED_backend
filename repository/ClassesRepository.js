@@ -6,7 +6,7 @@ module.exports = class ClassesRepository {
   }
 
   findOne(args) {
-    return model.findOne(args);
+    return model.findOne(args).lean();
   }
 
   create(args) {

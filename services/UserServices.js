@@ -14,7 +14,6 @@ module.exports = class UserService {
   async login(args) {
     try {
       const { username, password } = args;
-      console.log(username);
       const user = await this.userRepository.findOne({ email: username });
       if (!user) return { error: "Invalid username" };
       else {
@@ -40,13 +39,7 @@ module.exports = class UserService {
       });
       if (existingUser) return { error: "User already exists!!" };
       const session = await this.sessionsRepository.findOne({});
-      // console.log(session);
-      // console.log(
-      //   "sess->",
-      //   session,
-      //   String(session._id),
-      //   String(session.lessonId)
-      // );
+
       const [user] = await this.userRepository.create([
         {
           name,
@@ -72,6 +65,19 @@ module.exports = class UserService {
       });
       const token = jwt.sign({ userId: String(user.id) }, config.app.app_key);
       return { message: "created successfully", user: user, jwt: token };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async subscribe(args) {
+    try {
+      if (args?.secretKey === config.api_key)
+        await this.userRepository.updateOne(
+          { _id: args.userId },
+          { $set: { isSubscribed: true, skips: 6 } }
+        );
+      return { message: "Success" };
     } catch (error) {
       throw error;
     }

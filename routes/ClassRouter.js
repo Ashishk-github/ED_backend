@@ -1,14 +1,9 @@
 const router = require("express").Router();
 const Controller = require("../controllers/ClassesController");
 
-router.post("/v1/user/login", (req, res) => {
+router.get("/v1/classes/get", (req, res) => {
   const ControllerPromise = new Controller(res);
-  ControllerPromise.login(req);
-});
-
-router.post("/v1/user/register", (req, res) => {
-  const ControllerPromise = new Controller(res);
-  ControllerPromise.register(req);
+  ControllerPromise.get(req);
 });
 
 module.exports = router;

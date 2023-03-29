@@ -25,7 +25,8 @@ module.exports = class LessonsService {
 
   async create(args) {
     try {
-      const assignment = await this.userAssignmentsRepository.create(args);
+      const check = await this.userAssignmentsRepository.findOne(args);
+      if (!check) await this.userAssignmentsRepository.create(args);
       return { message: "done" };
     } catch (error) {
       throw error;
@@ -34,10 +35,9 @@ module.exports = class LessonsService {
 
   async update(cond, args) {
     try {
-      const assignment = await this.userAssignmentsRepository.updateMany(
-        cond,
-        args
-      );
+      const assignment = await this.userAssignmentsRepository.updateMany(cond, {
+        $set: args,
+      });
       return assignment;
     } catch (error) {
       throw error;
