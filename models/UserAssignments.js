@@ -25,6 +25,10 @@ const Schema = mongoose.Schema(
       type: String,
       default: "unlocked",
     },
+    isSkip: {
+      type: Boolean,
+      default: false,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
     },

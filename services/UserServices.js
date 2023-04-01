@@ -3,6 +3,7 @@ const SessionsRepository = require("../repository/SessionsRepository");
 const UserAssignmentsRepository = require("../repository/UserAssignmentsRepository");
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
+const { encrypt, decrypt } = require("../utils/common");
 
 module.exports = class UserService {
   constructor() {
@@ -13,10 +14,11 @@ module.exports = class UserService {
 
   async login(args) {
     try {
-      const { username, password } = args;
+      let { username, password } = args;
       const user = await this.userRepository.findOne({ email: username });
       if (!user) return { error: "Invalid username" };
       else {
+        user.password = decrypt(user.password);
         if (user.password === password) {
           const token = jwt.sign(
             { userId: String(user.id) },
@@ -32,14 +34,14 @@ module.exports = class UserService {
 
   async register(args) {
     try {
-      const { name, email, mobile, yearOfGraduation, password, university } =
+      let { name, email, mobile, yearOfGraduation, password, university } =
         args;
       const existingUser = await this.userRepository.findOne({
         $or: [{ email }, { mobile }],
       });
       if (existingUser) return { error: "User already exists!!" };
       const session = await this.sessionsRepository.findOne({});
-
+      password = encrypt(password);
       const [user] = await this.userRepository.create([
         {
           name,

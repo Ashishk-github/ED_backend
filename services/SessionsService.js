@@ -20,31 +20,44 @@ module.exports = class SessionsService {
         this.userRepository.findOne({ _id: userId }).lean(),
         this.userAssignmentsService.get({ userId, sessionId }),
       ]);
+      if (!user) return { error: "Invalid User" };
       const note = {
         userAssignmentId: assignment && assignment[0]?._id,
         answer,
         userId,
       };
-      const notes = await this.notesService.create(note);
       const nextSession = await this.sessionsRepository.findOne({
         _id: session.nextQuestion,
       });
-      const nextAssignment = await this.userAssignmentsService.create({
-        lessonId: nextSession.lessonId,
-        sessionId: nextSession._id,
-        userId,
-      });
-      const upd = await this.userAssignmentsService.update(
-        { _id: assignment && assignment[0]?._id },
-        {
-          endedAt: Date.now().toLocaleString("en-US", {
-            timeZone: "Asia/Kolkata",
-          }),
-          answerId: note._id,
-          status: "completed",
-          isActive: false,
-        }
-      );
+      if (!nextSession)
+        return { error: "Last lesson needs to be approved by mentor" };
+      const promises = [
+        this.userAssignmentsService.create({
+          lessonId: nextSession.lessonId,
+          sessionId: nextSession._id,
+          userId,
+        }),
+        this.notesService.create(note),
+        this.userAssignmentsService.update(
+          { _id: assignment && assignment[0]?._id },
+          {
+            endedAt: Date.now().toLocaleString("en-US", {
+              timeZone: "Asia/Kolkata",
+            }),
+            answerId: note._id,
+            status: "completed",
+            isActive: false,
+          }
+        ),
+      ];
+      if (assignment && assignment[0]?.isSkip)
+        promises.push(
+          this.userRepository.updateOne(
+            { _id: userId },
+            { $set: { skips: user.skips + 1 } }
+          )
+        );
+      await Promise.all(promises);
       return { message: "submited successfully" };
     } catch (error) {
       throw error;
@@ -63,7 +76,7 @@ module.exports = class SessionsService {
           { _id: start[0]._id },
           {
             status: "inprogress",
-            startedAt: Date.now().toLocaleString("en-US", {
+            startedAt: new Date().toLocaleString("en-US", {
               timeZone: "Asia/Kolkata",
             }),
           }
@@ -90,7 +103,8 @@ module.exports = class SessionsService {
         userId,
         sessionId: session?.nextQuestion,
       });
-      if (ifAlreadyExists?.length) return { error: "Already Skipped" };
+      if (ifAlreadyExists?.length || session.isSkip)
+        return { error: "Already Skipped" };
       const nextSession = await this.sessionsRepository.findOnelean({
         _id: session?.nextQuestion,
       });
@@ -99,6 +113,13 @@ module.exports = class SessionsService {
       if (session.type === "interview")
         return { error: "Interview Cannot Be Skipped" };
       await Promise.all([
+        this.userAssignmentsService.update(
+          {
+            userId,
+            sessionId: session._id,
+          },
+          { isSkip: true }
+        ),
         this.userAssignmentsService.create({
           lessonId: nextSession.lessonId,
           sessionId: nextSession._id,
@@ -109,7 +130,7 @@ module.exports = class SessionsService {
           { $set: { skips: user.skips - 1 } }
         ),
       ]);
-      return { error: "Skipped Successfully" };
+      return { message: "Skipped Successfully" };
     } catch (error) {
       throw error;
     }
