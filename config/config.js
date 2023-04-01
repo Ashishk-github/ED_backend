@@ -7,4 +7,5 @@ const config = {
     app_key: process.env.APP_KEY,
   },
 };
+process.var = config;
 module.exports = { config };

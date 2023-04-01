@@ -1,8 +1,7 @@
-const executionRouter=require('express').Router()
+const executionRouter = require("express").Router();
 
-executionRouter.get('/v1/scripts/run',(req,res)=>{
-    console.log('in')
-    res.json({message:'success'})
-})
+executionRouter.get("/v1/scripts/run", (req, res) => {
+  res.json({ message: "success" });
+});
 
-module.exports= executionRouter
+module.exports = executionRouter;

@@ -18,14 +18,4 @@ module.exports = class CoursesController extends Controller {
       this.respond(error);
     }
   }
-
-  async all(req) {
-    try {
-      const coursesServiceResponse = await this.coursesService.all2(req.query);
-      this.respond(coursesServiceResponse);
-    } catch (error) {
-      console.log(error);
-      this.respond(error);
-    }
-  }
 };

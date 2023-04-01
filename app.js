@@ -18,9 +18,9 @@ app.use("/user", router.userRouter);
 app.use("/courses", [verifyToken], router.coursesRouter);
 app.use("/sessions", [verifyToken], router.sessionsRouter);
 app.use("/lessons", [verifyToken], router.lessonsRouter);
+app.use("/classes", [verifyToken], router.classRouter);
 console.log("url-->", process.env.DB_URL);
 mongoose.connect(config.app.db_url).then((start) => {
-  console.log("connected to -->mongodb://127.0.0.1:27017/main");
   app.listen(4000, () => {
     console.log("started on 4000");
   });

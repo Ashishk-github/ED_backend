@@ -12,6 +12,10 @@ const UserSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    skips: {
+      type: Number,
+      default: 0,
+    },
     courses: {
       previousQuestion: Array,
       currentQuestion: {

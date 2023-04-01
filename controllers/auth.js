@@ -10,7 +10,6 @@ const verifyToken = (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, config.app.app_key);
-    console.log(decoded);
     req.body.userId = decoded.userId;
     req.query.userId = decoded.userId;
   } catch (err) {
