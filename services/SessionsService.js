@@ -31,6 +31,16 @@ module.exports = class SessionsService {
       });
       if (!nextSession)
         return { error: "Last lesson needs to be approved by mentor" };
+      const submissionTime =
+        parseInt(new Date(assignment[0]?.startedAt).getTime()) +
+        parseInt(session?.time) * 60000 -
+        parseInt(new Date().getTime());
+      console.log(
+        parseInt(new Date(assignment[0]?.startedAt).getTime()),
+        parseInt(assignment[0]?.time),
+        new Date().getTime(),
+        submissionTime
+      );
       const promises = [
         this.userAssignmentsService.create({
           lessonId: nextSession.lessonId,
@@ -47,15 +57,16 @@ module.exports = class SessionsService {
             answerId: note._id,
             status: "completed",
             isActive: false,
+            isOnTime: submissionTime >= 0 ? true : false,
           }
         ),
       ];
-      if (assignment && assignment[0]?.isSkip)
+      let update = {};
+      if (assignment && assignment[0]?.isSkip) update["skips"] = user.skips + 1;
+      if (submissionTime < 0) update["delaySubmit"] = user.delaySubmit || 0 + 1;
+      if (Object.keys(update || {})?.length)
         promises.push(
-          this.userRepository.updateOne(
-            { _id: userId },
-            { $set: { skips: user.skips + 1 } }
-          )
+          this.userRepository.updateOne({ _id: userId }, { $set: update })
         );
       await Promise.all(promises);
       return { message: "submited successfully" };

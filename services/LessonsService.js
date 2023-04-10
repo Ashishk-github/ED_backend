@@ -32,7 +32,12 @@ module.exports = class LessonsService {
           return String(a.sessionId) === String(session._id);
         });
         let status = assignment?.status ? assignment.status : "locked";
-        lesson.sessions.push({ ...session, status });
+        lesson.sessions.push({
+          ...session,
+          startedAt: assignment?.startedAt,
+          endedAt: assignment?.endedAt,
+          status,
+        });
       });
       return lesson;
     } catch (error) {
