@@ -24,4 +24,8 @@ module.exports = class SessionsRepository {
   updateMany(args) {
     return sessions.updateMany(cond, args);
   }
+
+  count(args) {
+    return sessions.countDocuments(args);
+  }
 };

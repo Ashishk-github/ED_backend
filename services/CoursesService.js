@@ -1,12 +1,14 @@
 const CoursesRepository = require("../repository/CoursesRepository");
 const LessonsRepository = require("../repository/LessonsRepository");
 const UserRepository = require("../repository/UserRepository");
+const SessionsRepository = require("../repository/SessionsRepository");
 const UserAssignmentsService = require("../services/UserAssignmentsService");
 module.exports = class CoursesService {
   constructor() {
     this.coursesRepository = new CoursesRepository();
     this.lessonsRepository = new LessonsRepository();
     this.userRepository = new UserRepository();
+    this.sessionsRepository = new SessionsRepository();
     this.userAssignmentsService = new UserAssignmentsService();
   }
 
@@ -49,12 +51,37 @@ module.exports = class CoursesService {
       result[1].forEach((c) => {
         course[String(c._id)] = { ...c, lessons: [] };
       });
-      result[2].forEach((lesson) => {
+      result[2].forEach(async (lesson) => {
         let status = result[0].find(
-          (a) => a.lessonId === String(lesson._id)
-        )[0];
+          (a) => String(a.lessonId) === String(lesson._id)
+        );
+        const started = result[0].find(
+          (a) =>
+            String(a.lessonId) === String(lesson._id) &&
+            ["completed", "inprogress"].includes(a.status)
+        );
+        let ended = result[0].find(
+          (a) =>
+            String(a.lessonId) === String(lesson._id) &&
+            ["completed"].includes(a.status) &&
+            a.type === "interview"
+        );
+        let totalRating = 0,
+          count = 1;
+        const matched = result[0].filter((x) => {
+          if (String(x.lessonId) === String(lesson._id))
+            totalRating = totalRating + parseInt(x?.rating || 0);
+          return String(x.lessonId) === String(lesson._id);
+        });
+        if (matched?.length) count = matched.length;
         status = status?.status ? status.status : "locked";
-        course[String(lesson.courseId)].lessons.push({ ...lesson, status });
+        course[String(lesson.courseId)].lessons.push({
+          ...lesson,
+          ended: ended?.endedAt || "-",
+          started: started?.startedAt || "-",
+          rating: totalRating / count || "-",
+          status,
+        });
       });
       return Object.values(course);
     } catch (error) {
