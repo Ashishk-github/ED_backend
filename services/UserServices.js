@@ -84,4 +84,14 @@ module.exports = class UserService {
       throw error;
     }
   }
+
+  async getUserDetails(args) {
+    try {
+      const { userId } = args;
+      const user = await this.userRepository.findOnelean({ _id: userId });
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 };

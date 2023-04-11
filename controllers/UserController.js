@@ -33,4 +33,15 @@ module.exports = class UserController extends Controller {
       console.log(error);
     }
   }
+
+  async get(req) {
+    try {
+      const userServiceResponse = await this.userService.getUserDetails(
+        req.body
+      );
+      this.respond(userServiceResponse);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 };

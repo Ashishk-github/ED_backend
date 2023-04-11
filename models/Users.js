@@ -16,6 +16,10 @@ const UserSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    delaySubmit: {
+      type: Number,
+      default: 0,
+    },
     courses: {
       previousQuestion: Array,
       currentQuestion: {

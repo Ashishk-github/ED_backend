@@ -40,6 +40,9 @@ const Schema = mongoose.Schema(
     endedAt: {
       type: String,
     },
+    isOnTime: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,

@@ -1,4 +1,5 @@
 const SessionsRepository = require("../repository/SessionsRepository");
+const LessonsRepository = require("../repository/LessonsRepository");
 const UserRepository = require("../repository/UserRepository");
 const UserAssignmentsService = require("../services/UserAssignmentsService");
 const NotesService = require("../services/NotesService");
@@ -7,6 +8,7 @@ const jwt = require("jsonwebtoken");
 module.exports = class SessionsService {
   constructor() {
     this.sessionsRepository = new SessionsRepository();
+    this.lessonsRepository = new LessonsRepository();
     this.userAssignmentsService = new UserAssignmentsService();
     this.userRepository = new UserRepository();
     this.notesService = new NotesService();
@@ -31,6 +33,16 @@ module.exports = class SessionsService {
       });
       if (!nextSession)
         return { error: "Last lesson needs to be approved by mentor" };
+      const submissionTime =
+        parseInt(new Date(assignment[0]?.startedAt).getTime()) +
+        parseInt(session?.time) * 60000 -
+        parseInt(new Date().getTime());
+      console.log(
+        parseInt(new Date(assignment[0]?.startedAt).getTime()),
+        parseInt(assignment[0]?.time),
+        new Date().getTime(),
+        submissionTime
+      );
       const promises = [
         this.userAssignmentsService.create({
           lessonId: nextSession.lessonId,
@@ -47,15 +59,16 @@ module.exports = class SessionsService {
             answerId: note._id,
             status: "completed",
             isActive: false,
+            isOnTime: submissionTime >= 0 ? true : false,
           }
         ),
       ];
-      if (assignment && assignment[0]?.isSkip)
+      let update = {};
+      if (assignment && assignment[0]?.isSkip) update["skips"] = user.skips + 1;
+      if (submissionTime < 0) update["delaySubmit"] = user.delaySubmit || 0 + 1;
+      if (Object.keys(update || {})?.length)
         promises.push(
-          this.userRepository.updateOne(
-            { _id: userId },
-            { $set: { skips: user.skips + 1 } }
-          )
+          this.userRepository.updateOne({ _id: userId }, { $set: update })
         );
       await Promise.all(promises);
       return { message: "submited successfully" };
@@ -131,6 +144,123 @@ module.exports = class SessionsService {
         ),
       ]);
       return { message: "Skipped Successfully" };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addSession(args) {
+    try {
+      const {
+        client_id,
+        client_secret,
+        name,
+        lessonName,
+        description,
+        nextQuestion,
+        type,
+        time,
+        sorting,
+        question,
+        link,
+        videoId,
+      } = args;
+      if (
+        client_id !== process.var.app.client_id ||
+        client_secret !== process.var.app.client_secret
+      )
+        return { error: "Invalid credentials" };
+      const [lesson, existingSession] = await Promise.all([
+        this.lessonsRepository.findOnelean({ name: lessonName }),
+        this.sessionsRepository.findOnelean({ $or: [{ name }, { sorting }] }),
+      ]);
+      if (!lesson) return { error: "Invalid Lesson Name" };
+      if (existingSession) return { error: "Name or sorting already exists" };
+      const session = await this.sessionsRepository.create([
+        {
+          name,
+          description,
+          nextQuestion,
+          type,
+          sorting,
+          question,
+          link,
+          videoId,
+          lessonId: lesson._id,
+          time,
+        },
+      ]);
+      return { message: "Created successfully", session };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateSession(args) {
+    try {
+      const {
+        client_id,
+        client_secret,
+        sessionName,
+        newName,
+        lessonName,
+        description,
+        nextQuestion,
+        type,
+        time,
+        sorting,
+        question,
+        link,
+        videoId,
+      } = args;
+      if (
+        client_id !== process.var.app.client_id ||
+        client_secret !== process.var.app.client_secret
+      )
+        return { error: "Invalid credentials" };
+      await this.sessionsRepository.updateOne(
+        { name: sessionName },
+        {
+          $set: {
+            name: newName || sessionName,
+            lessonName,
+            description,
+            nextQuestion,
+            type,
+            sorting,
+            question,
+            link,
+            videoId,
+            time,
+          },
+        }
+      );
+      return { message: "updated successfully" };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async get(args) {
+    try {
+      const { client_id, client_secret, sessionName, lessonName } = args;
+      if (
+        client_id !== process.var.app.client_id ||
+        client_secret !== process.var.app.client_secret
+      )
+        return { error: "Invalid credentials" };
+      if (sessionName)
+        return await this.sessionsRepository.findOnelean({ name: sessionName });
+      if (lessonName) {
+        const lesson = await this.lessonsRepository.findOnelean({
+          name: lessonName,
+        });
+        const sessions = await this.sessionsRepository.find({
+          lessonId: lesson._id,
+        });
+        return { ...lesson, sessions };
+      }
+      return await this.sessionsRepository.find({});
     } catch (error) {
       throw error;
     }

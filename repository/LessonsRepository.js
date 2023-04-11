@@ -1,15 +1,19 @@
-const lessons=require('../models/Lessons')
+const lessons = require("../models/Lessons");
 
-module.exports= class LessonsRepository{
-    find(args){
-        return lessons.find(args)
-    }
+module.exports = class LessonsRepository {
+  find(args) {
+    return lessons.find(args);
+  }
 
-    findOne(args){
-        return lessons.findOne(args)
-    }
+  findOne(args) {
+    return lessons.findOne(args);
+  }
 
-    create(args){
-        return lessons.insertMany(args)
-    }
-}
+  findOnelean(args) {
+    return lessons.findOne(args).lean();
+  }
+
+  create(args) {
+    return lessons.insertMany(args);
+  }
+};

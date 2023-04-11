@@ -39,4 +39,35 @@ module.exports = class SessionsController extends Controller {
       this.sendError(error);
     }
   }
+
+  async createSession(req) {
+    try {
+      const sessionsServiceResponse = await this.sessionsService.addSession(
+        req.body
+      );
+      this.respond(sessionsServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
+
+  async updateSession(req) {
+    try {
+      const sessionsServiceResponse = await this.sessionsService.updateSession(
+        req.body
+      );
+      this.respond(sessionsServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
+
+  async getSession(req) {
+    try {
+      const sessionsServiceResponse = await this.sessionsService.get(req.body);
+      this.respond(sessionsServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
 };

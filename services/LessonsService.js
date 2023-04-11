@@ -21,7 +21,10 @@ module.exports = class LessonsService {
       if (!lesson) return { error: "Invalid lessonId" };
       lesson.sessions = [];
       const [sessions, user, assignments] = await Promise.all([
-        this.sessionsRepository.find({ lessonId: lesson._id }).lean(),
+        this.sessionsRepository
+          .find({ lessonId: lesson._id })
+          .sort({ sorting: 1 })
+          .lean(),
         this.userRepository.findOne({ _id: userId }).lean(),
         this.userAssignmentsService.get({ userId, lessonId }),
       ]);
@@ -32,7 +35,12 @@ module.exports = class LessonsService {
           return String(a.sessionId) === String(session._id);
         });
         let status = assignment?.status ? assignment.status : "locked";
-        lesson.sessions.push({ ...session, status });
+        lesson.sessions.push({
+          ...session,
+          startedAt: assignment?.startedAt,
+          endedAt: assignment?.endedAt,
+          status,
+        });
       });
       return lesson;
     } catch (error) {
