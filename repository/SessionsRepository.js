@@ -16,4 +16,12 @@ module.exports = class SessionsRepository {
   create(args) {
     return sessions.insertMany(args);
   }
+
+  updateOne(cond, args) {
+    return sessions.updateOne(cond, args);
+  }
+
+  updateMany(args) {
+    return sessions.updateMany(cond, args);
+  }
 };

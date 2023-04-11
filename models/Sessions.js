@@ -8,6 +8,9 @@ const SessionsSchema = mongoose.Schema({
   type: String,
   sorting: String,
   nextQuestion: mongoose.Schema.Types.ObjectId,
+  time:String,
+  videoId:String,
+  link:String,
 });
 
 const Sessions = mongoose.model("sessions", SessionsSchema);
