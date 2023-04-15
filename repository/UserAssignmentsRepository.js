@@ -20,4 +20,8 @@ module.exports = class UserAssignmentsRepository {
   updateOne(cond, args) {
     return model.updateOne(cond, args);
   }
+
+  aggregate(agg) {
+    return model.aggregate(agg);
+  }
 };

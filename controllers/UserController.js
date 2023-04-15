@@ -44,4 +44,13 @@ module.exports = class UserController extends Controller {
       console.log(error);
     }
   }
+
+  async loginAdmin(req) {
+    try {
+      const userServiceResponse = await this.userService.loginAdmin(req.body);
+      this.respond(userServiceResponse);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 };

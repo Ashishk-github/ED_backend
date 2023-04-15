@@ -94,4 +94,24 @@ module.exports = class UserService {
       throw error;
     }
   }
+
+  async loginAdmin(args) {
+    try {
+      let { username, password } = args;
+      const user = await this.userRepository.findOnelean({ email: username });
+      if (!user || !user?.isAdmin) return { error: "Invalid username" };
+      else {
+        user.password = decrypt(user.password);
+        if (user.password === password) {
+          const token = jwt.sign(
+            { userId: String(user.id) },
+            config.app.app_key
+          );
+          return { jwt: token, user };
+        } else return { error: "Incorrect Password" };
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
 };

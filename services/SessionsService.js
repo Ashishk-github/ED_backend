@@ -28,11 +28,11 @@ module.exports = class SessionsService {
         answer,
         userId,
       };
+      if (session?.type === "interview" && !args?.isMentor)
+        return { error: "Interview has to be submited by mentor" };
       const nextSession = await this.sessionsRepository.findOne({
         _id: session.nextQuestion,
       });
-      if (!nextSession)
-        return { error: "Last lesson needs to be approved by mentor" };
       const submissionTime =
         parseInt(new Date(assignment[0]?.startedAt).getTime()) +
         parseInt(session?.time) * 60000 -

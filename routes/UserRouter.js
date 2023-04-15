@@ -8,6 +8,11 @@ userRouter.post("/v1/user/login", async (req, res) => {
   userControllerPromise.login(req);
 });
 
+userRouter.post("/v1/user/loginAdmin", async (req, res) => {
+  const userControllerPromise = new UserController(res);
+  userControllerPromise.loginAdmin(req);
+});
+
 userRouter.post("/v1/user/register", async (req, res) => {
   const userControllerPromise = new UserController(res);
   userControllerPromise.register(req);
