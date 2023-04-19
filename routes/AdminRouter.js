@@ -21,4 +21,9 @@ adminRouter.post("/v1/admin/reassign", async (req, res) => {
   adminControllerPromise.reassign(req);
 });
 
+adminRouter.post("/v1/admin/updateUser", async (req, res) => {
+  const adminControllerPromise = new AdminController(res);
+  adminControllerPromise.updateUser(req);
+});
+
 module.exports = adminRouter;

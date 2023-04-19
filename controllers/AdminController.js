@@ -65,4 +65,14 @@ module.exports = class AdminController extends Controller {
       this.sendError(error);
     }
   }
+
+  async updateUser(req, res) {
+    try {
+      await this.checkAdmin(req);
+      const adminServiceResponse = await this.adminService.updateUser(req.body);
+      this.respond(adminServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
 };

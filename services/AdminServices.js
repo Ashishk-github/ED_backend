@@ -3,6 +3,7 @@ const SessionsRepository = require("../repository/SessionsRepository");
 const UserAssignmentsRepository = require("../repository/UserAssignmentsRepository");
 const SessionsService = require("../services/SessionsService");
 const { default: mongoose } = require("mongoose");
+const { encrypt, decrypt } = require("../utils/common");
 
 module.exports = class AdminService {
   constructor() {
@@ -73,6 +74,33 @@ module.exports = class AdminService {
         answer: "Mentors Review:" + remark || "No Remarks",
         isMentor: true,
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUser(args) {
+    try {
+      let {
+        skips,
+        email,
+        mobile,
+        name,
+        password,
+        univerity,
+        yearOfGraduation,
+        _id,
+      } = args;
+      const obj = {};
+      if (password?.length) obj["password"] = encrypt(password);
+      if (skips || 0 == parseInt(skips)) obj["skips"] = skips;
+      if (email?.length) obj["email"] = email;
+      if (mobile?.length) obj["mobile"] = mobile;
+      if (name?.length) obj["name"] = name;
+      if (univerity?.length) obj["univerity"] = univerity;
+      if (yearOfGraduation?.length) obj["yearOfGraduation"] = yearOfGraduation;
+      const user = await this.userRepository.updateOne({ _id }, { $set: obj });
+      return user;
     } catch (error) {
       throw error;
     }
