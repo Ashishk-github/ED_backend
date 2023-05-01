@@ -29,4 +29,13 @@ module.exports = class NotesService {
       throw error;
     }
   }
+
+  async upsert(cond, args) {
+    try {
+      const notes = await this.notesRepository.upsert(cond, args);
+      return notes;
+    } catch (error) {
+      throw error;
+    }
+  }
 };

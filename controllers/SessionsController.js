@@ -70,4 +70,15 @@ module.exports = class SessionsController extends Controller {
       this.sendError(error);
     }
   }
+
+  async get(req) {
+    try {
+      const sessionsServiceResponse = await this.sessionsService.getById(
+        req.query
+      );
+      this.respond(sessionsServiceResponse);
+    } catch (error) {
+      this.sendError(error);
+    }
+  }
 };

@@ -20,16 +20,14 @@ module.exports = class LessonsService {
         .lean();
       if (!lesson) return { error: "Invalid lessonId" };
       lesson.sessions = [];
-      const [sessions, user, assignments] = await Promise.all([
+      const [sessions, assignments] = await Promise.all([
         this.sessionsRepository
           .find({ lessonId: lesson._id })
           .sort({ sorting: 1 })
           .lean(),
-        this.userRepository.findOne({ _id: userId }).lean(),
         this.userAssignmentsService.get({ userId, lessonId }),
       ]);
 
-      let status = "completed";
       sessions.forEach((session) => {
         let assignment = assignments.find((a) => {
           return String(a.sessionId) === String(session._id);

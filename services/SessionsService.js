@@ -1,6 +1,8 @@
 const SessionsRepository = require("../repository/SessionsRepository");
 const LessonsRepository = require("../repository/LessonsRepository");
 const UserRepository = require("../repository/UserRepository");
+const NotesRepository = require("../repository/NotesRepository");
+const UserAssignmentsRepository = require("../repository/UserAssignmentsRepository");
 const UserAssignmentsService = require("../services/UserAssignmentsService");
 const NotesService = require("../services/NotesService");
 const jwt = require("jsonwebtoken");
@@ -11,6 +13,8 @@ module.exports = class SessionsService {
     this.lessonsRepository = new LessonsRepository();
     this.userAssignmentsService = new UserAssignmentsService();
     this.userRepository = new UserRepository();
+    this.notesRepository = new NotesRepository();
+    this.userAssignmentsRepository = new UserAssignmentsRepository();
     this.notesService = new NotesService();
   }
 
@@ -49,11 +53,14 @@ module.exports = class SessionsService {
           sessionId: nextSession._id,
           userId,
         }),
-        this.notesService.create(note),
+        this.notesService.upsert(
+          { userAssignmentId: assignment && assignment[0]?._id },
+          note
+        ),
         this.userAssignmentsService.update(
           { _id: assignment && assignment[0]?._id },
           {
-            endedAt: Date.now().toLocaleString("en-US", {
+            endedAt: new Date().toLocaleString("en-US", {
               timeZone: "Asia/Kolkata",
             }),
             answerId: note._id,
@@ -261,6 +268,32 @@ module.exports = class SessionsService {
         return { ...lesson, sessions };
       }
       return await this.sessionsRepository.find({});
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getById(args) {
+    try {
+      const { userId, sessionId, lessonId } = args;
+      let answer;
+      const [userSession, session] = await Promise.all([
+        this.userAssignmentsRepository.findOneLean({
+          sessionId,
+          userId,
+          lessonId,
+        }),
+        this.sessionsRepository.findOnelean({ _id: sessionId, lessonId }),
+      ]);
+      if (!userSession) return null;
+      if (userSession.status === "completed")
+        answer = await this.notesRepository.findOneLean({
+          userAssignmentId: userSession._id,
+          userId,
+        });
+      if (answer)
+        return { ...userSession, ...session, answer: answer?.answer || "" };
+      else return { ...userSession, ...session };
     } catch (error) {
       throw error;
     }

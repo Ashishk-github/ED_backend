@@ -9,6 +9,10 @@ module.exports = class NotesRepository {
     return model.findOne(args);
   }
 
+  findOneLean(args) {
+    return model.findOne(args).lean();
+  }
+
   create(args) {
     return model.insertMany(args);
   }
@@ -19,5 +23,9 @@ module.exports = class NotesRepository {
 
   updateOne(cond, args) {
     return model.updateOne(cond, args);
+  }
+
+  upsert(cond, args) {
+    return model.findOneAndUpdate(cond, args, { upsert: true });
   }
 };

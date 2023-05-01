@@ -9,6 +9,10 @@ module.exports = class UserAssignmentsRepository {
     return model.findOne(args);
   }
 
+  findOneLean(args) {
+    return model.findOne(args).lean();
+  }
+
   create(args) {
     return model.insertMany(args);
   }

@@ -32,4 +32,9 @@ sessionsRouter.post("/v1/sessions/getSession", async (req, res) => {
   sessionsControllerPromise.getSession(req);
 });
 
+sessionsRouter.get("/v1/sessions/get", async (req, res) => {
+  const sessionsControllerPromise = new SessionsController(res);
+  sessionsControllerPromise.get(req);
+});
+
 module.exports = sessionsRouter;
